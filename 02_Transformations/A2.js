@@ -347,9 +347,9 @@ socketPos3 = [2.4, -0.35, -2.4];
 socketPos4 = [-2.4, -0.35, -2.4];
 //***** Q2 *****//
 var arm1 = addOneArm(Math.PI*(-135/180), Math.PI*(-0.5), socketPos1);
-// var arm2 = addOneArm(Math.PI*(angleY), Math.PI*(angleZ), socketPos2);
-//var arm3 = addOneArm(Math.PI*(angleY), Math.PI*(angleZ), socketPos3);
-//var arm4 = addOneArm(Math.PI*(angleY), Math.PI*(angleZ), socketPos4);
+var arm2 = addOneArm(Math.PI*(-45/180), Math.PI*(-0.5), socketPos2);
+var arm3 = addOneArm(Math.PI*(45/180), Math.PI*(-0.5), socketPos3);
+var arm4 = addOneArm(Math.PI*(135/180), Math.PI*(-0.5), socketPos4);
 
 //***** Q3.b *****/
 function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
