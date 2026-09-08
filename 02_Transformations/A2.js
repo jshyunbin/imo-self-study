@@ -279,29 +279,56 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   var joint2 = new THREE.Mesh(j2, normalMaterial);
   var TS_J2 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 1.25,
+    0, 1, 0, 2.45,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
 
-  var j2TS = new THREE.Matrix4().multiplyMatrices(Rot, TS_L1);
-  j2TS = new THREE.Matrix4().multiplyMatrices(TS, l1TS);
-  joint2.setMatrix(COMPUTED MATRIX);
+  var j2TS = new THREE.Matrix4().multiplyMatrices(Rot, TS_J2);
+  j2TS = new THREE.Matrix4().multiplyMatrices(TS, j2TS);
+  joint2.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, j2TS));
   scene.add(joint2);
 
   // Add link2
   var link2 = new THREE.Mesh(l2, normalMaterial);
-  //link2.setMatrix(COMPUTED MATRIX);
+  var TS_L2 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 3.45,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  var l2TS = new THREE.Matrix4().multiplyMatrices(Rot, TS_L2);
+  l2TS = new THREE.Matrix4().multiplyMatrices(TS, l2TS);
+  link2.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, l2TS));
   scene.add(link2);
 
   // Add joint3
   var joint3 = new THREE.Mesh(j3, normalMaterial);
-  //joint3.setMatrix(COMPUTED MATRIX);
+  var TS_J3 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 4.45,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  var j3TS = new THREE.Matrix4().multiplyMatrices(Rot, TS_J3);
+  j3TS = new THREE.Matrix4().multiplyMatrices(TS, j3TS);
+  joint3.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, j3TS));
   scene.add(joint3);
 
   // Add link3
   var link3 = new THREE.Mesh(l3, normalMaterial);
-  //link3.setMatrix(COMPUTED MATRIX);
+  var TS_L3 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 5.60,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  var l3TS = new THREE.Matrix4().multiplyMatrices(Rot, TS_L3);
+  l3TS = new THREE.Matrix4().multiplyMatrices(TS, l3TS);
+  link3.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, l3TS));
   scene.add(link3);
 
   return [joint1, link1, joint2, link2, joint3, link3];
