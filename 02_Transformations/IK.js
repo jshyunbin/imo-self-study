@@ -414,7 +414,7 @@ function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
   var TS_L1 = new THREE.Matrix4().set(
     1, 0, 0, 0,
     0, 1, 0, 1,
-    0, 0, 1, 0,[-3.136, -0.35, -1.30];
+    0, 0, 1, 0,
     0, 0, 0, 1,
   );
 
@@ -574,10 +574,14 @@ function updateBody() {
         pupil_L.setMatrix(oct_pupil);
         // Animate Arms
         //***** Q3.c *****//
-        animateArm(t, arm1, Math.PI*(-135/180), Math.PI*(-0.5), socketPos1);
-        animateArm(t, arm2, Math.PI*(-45/180), Math.PI*(-0.5), socketPos2);
-        animateArm(t, arm3, Math.PI*(45/180), Math.PI*(-0.5), socketPos3);
-        animateArm(t, arm4, Math.PI*(135/180), Math.PI*(-0.5), socketPos4);
+        animateArm(t, arm1, Math.PI*(-1/8), Math.PI*(-0.5), socketPos1);
+        animateArm(t, arm2, Math.PI*(1/8), Math.PI*(-0.5), socketPos2);
+        animateArm(t, arm3, Math.PI*(-7/8), Math.PI*(-0.5), socketPos3);
+        animateArm(t, arm4, Math.PI*(7/8), Math.PI*(-0.5), socketPos4);
+        animateArm(t, arm5, Math.PI*(-3/8), Math.PI*(-0.5), socketPos5);
+        animateArm(t, arm6, Math.PI*(3/8), Math.PI*(-0.5), socketPos6);
+        animateArm(t, arm7, Math.PI*(-5/8), Math.PI*(-0.5), socketPos7);
+        animateArm(t, arm8, Math.PI*(5/8), Math.PI*(-0.5), socketPos8);
       }
 
       break;
