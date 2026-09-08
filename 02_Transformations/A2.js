@@ -230,18 +230,8 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   */
   var joint1 = new THREE.Mesh(j1, normalMaterial);
 
-  var RotY = new THREE.Matrix4().set(
-    Math.cos(angle_Y), 0, Math.sin(angle_Y), 0,
-    0, 1, 0, 0,
-    -Math.sin(angle_Y), 0, Math.cos(angle_Y), 0,
-    0, 0, 0, 1
-  );
-  var RotZ = new THREE.Matrix4().set(
-    Math.cos(angle_Z), -Math.sin(angle_Z), 0, 0,
-    Math.sin(angle_Z), Math.cos(angle_Z), 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  );
+  var RotY = defineRotation_Y(angle_Y);
+  var RotZ = defineRotation_Z(angle_Z);
 
   var Rot = new THREE.Matrix4().multiplyMatrices(RotY, RotZ);
 
@@ -265,7 +255,7 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
 
   var TS_L1 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 1.25,
+    0, 1, 0, 1,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
@@ -279,7 +269,7 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   var joint2 = new THREE.Mesh(j2, normalMaterial);
   var TS_J2 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 2.45,
+    0, 1, 0, 2,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
@@ -293,7 +283,7 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   var link2 = new THREE.Mesh(l2, normalMaterial);
   var TS_L2 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 3.45,
+    0, 1, 0, 3,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
@@ -307,7 +297,7 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   var joint3 = new THREE.Mesh(j3, normalMaterial);
   var TS_J3 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 4.45,
+    0, 1, 0, 4,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
@@ -321,7 +311,7 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   var link3 = new THREE.Mesh(l3, normalMaterial);
   var TS_L3 = new THREE.Matrix4().set(
     1, 0, 0, 0,
-    0, 1, 0, 5.60,
+    0, 1, 0, 5,
     0, 0, 1, 0,
     0, 0, 0, 1,
   );
@@ -383,6 +373,95 @@ function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
    *       sine t, then we have a periodic effect
    *       var rotation = defineRotation_{AXIS}(f(sin(t)))
   */
+  var OM = new THREE.Matrix4().set(
+    1.0,0.0,0.0,0.0, 
+    0.0,1.0,0.0,(Math.sin(t/1.1+11)*1.8)+3, 
+    0.0,0.0,1.0,0.0, 
+    0.0,0.0,0.0,1.0
+  );
+
+  var RotY = defineRotation_Y(angle_Y);
+  var RotZ = defineRotation_Z(angle_Z);
+
+  var slope1 = defineRotation_Z(Math.cos(t/1.1+10.3)*Math.PI*(-15/180))
+
+  var Rot = new THREE.Matrix4().multiplyMatrices(RotY, RotZ);
+  Rot = new THREE.Matrix4().multiplyMatrices(Rot, slope1);
+
+  var TS = new THREE.Matrix4().set(
+    1, 0, 0, socketPosition[0],
+    0, 1, 0, socketPosition[1],
+    0, 0, 1, socketPosition[2],
+    0, 0, 0, 1
+  );
+
+  var j1TS = new THREE.Matrix4().multiplyMatrices(TS, Rot);
+
+  joint1.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, j1TS));
+
+  // Add link1
+  /* Hint: Find out the translation matrix so that
+   *       link is connected with joints, without overlaping
+   */
+  var TS_L1 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  var gap = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  TS_L1 = new THREE.Matrix4().multiplyMatrices(Rot, TS_L1);
+  var l1TS = new THREE.Matrix4().multiplyMatrices(TS, TS_L1);
+  
+  link1.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, l1TS));
+
+  var bump = new THREE.Matrix4().multiplyMatrices(TS_L1, gap);
+  
+  // Add joint2
+  var j2TS = new THREE.Matrix4().multiplyMatrices(TS, bump);
+  joint2.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, j2TS));
+  
+
+  // Add link2
+  var TS_L2 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  TS_L2 = new THREE.Matrix4().multiplyMatrices(slope1, TS_L2);
+  TS_L2 = new THREE.Matrix4().multiplyMatrices(bump, TS_L2);
+  var l2TS = new THREE.Matrix4().multiplyMatrices(TS, TS_L2);
+  link2.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, l2TS));
+
+  bump = new THREE.Matrix4().multiplyMatrices(TS_L2, gap);
+
+  // Add joint3
+  j3TS = new THREE.Matrix4().multiplyMatrices(TS, bump);
+  joint3.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, j3TS));
+
+  // Add link3
+  var TS_L3 = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  TS_L3 = new THREE.Matrix4().multiplyMatrices(slope1, TS_L3);
+  TS_L3 = new THREE.Matrix4().multiplyMatrices(bump, TS_L3);
+  var l3TS = new THREE.Matrix4().multiplyMatrices(TS, TS_L3);
+  link3.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, l3TS));
+
+  return [joint1, link1, joint2, link2, joint3, link3];
 }
 
 var clock = new THREE.Clock(true);
@@ -452,16 +531,45 @@ function updateBody() {
           0.0,0.0,0.0,1.0
         );
         //***** Q3.a *****//
-        // Animate Right Eye (eyeball and pupil)
-        
-        // Animate Left Eye (eyeball and pupil)
-        
+        // Right eye
+        eyeball_R.setMatrix(new THREE.Matrix4().multiplyMatrices(
+          octopusMatrix.value,
+          eyeballTS_R
+        ));
+        pupil_R.setMatrix(new THREE.Matrix4().multiplyMatrices(
+          new THREE.Matrix4().multiplyMatrices(
+            octopusMatrix.value,
+            eyeballTS_R
+          ),
+          new THREE.Matrix4().multiplyMatrices(
+            defineRotation_Y(theta_R),
+            pupilTS_R
+          )
+        ));
+        scene.add(eyeball_R);
+        scene.add(pupil_R);
+        // You can also define the matrices and multiply
+        // Left eye
+        oct_eye_L = new THREE.Matrix4().multiplyMatrices(
+          octopusMatrix.value,
+          eyeballTS_L
+        );
+        pupil_L_TSR = new THREE.Matrix4().multiplyMatrices(
+          defineRotation_Y(theta_L),
+          pupilTS_L
+        );
+        oct_pupil = new THREE.Matrix4().multiplyMatrices(
+          oct_eye_L,
+          pupil_L_TSR
+        );
+        eyeball_L.setMatrix(oct_eye_L);
+        pupil_L.setMatrix(oct_pupil);
         // Animate Arms
         //***** Q3.c *****//
         animateArm(t, arm1, Math.PI*(-135/180), Math.PI*(-0.5), socketPos1);
-        // animateArm(t, arm2, angleY,  angleZ, socketPos2);
-        // animateArm(t, arm3, angleY,  angleZ, socketPos3);
-        // animateArm(t, arm4, angleY,  angleZ, socketPos4);
+        animateArm(t, arm2, Math.PI*(-45/180), Math.PI*(-0.5), socketPos2);
+        animateArm(t, arm3, Math.PI*(45/180), Math.PI*(-0.5), socketPos3);
+        animateArm(t, arm4, Math.PI*(135/180), Math.PI*(-0.5), socketPos4);
       }
 
       break;
