@@ -59,6 +59,9 @@ var octopusMaterial = new THREE.ShaderMaterial({
     octopusMatrix: octopusMatrix,
   },
 });
+var eefMaterial = new THREE.MeshBasicMaterial({
+  color: new THREE.Color('red'),
+});
 var shaderFiles = [
   'glsl/octopus.vs.glsl',
   'glsl/octopus.fs.glsl'
@@ -213,6 +216,9 @@ var l2 = new THREE.CylinderGeometry(0.25, 0.35, 2, 64);
 var j3 = new THREE.SphereGeometry(0.3, 64, 64);
 var l3 = new THREE.CylinderGeometry(0.1, 0.25, 2, 64);
 
+// Add draggable eef object for ik eef reference
+var eef_geo = new THREE.SphereGeometry(0.2,64,64);
+
 // ***** Q1 *****//
 function addOneArm(angle_Y, angle_Z, socketPosition) {
   /* angle_Y, angle_Z determines the direction of the enire arm
@@ -321,7 +327,21 @@ function addOneArm(angle_Y, angle_Z, socketPosition) {
   link3.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, l3TS));
   scene.add(link3);
 
-  return [joint1, link1, joint2, link2, joint3, link3];
+  // Add eef
+  var eef = new THREE.Mesh(eef_geo, eefMaterial);
+  var TS_EE = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 6,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  var eeTS = new THREE.Matrix4().multiplyMatrices(Rot, TS_EE);
+  eeTS = new THREE.Matrix4().multiplyMatrices(TS, eeTS);
+  eef.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, eeTS));
+  scene.add(eef);
+
+  return [joint1, link1, joint2, link2, joint3, link3, eef];
 }
 
 /* Now, call addOneArm() 4 times with 4 directions and
@@ -349,6 +369,18 @@ var arm6 = addOneArm(Math.PI*(3/8), Math.PI*(-0.5), socketPos6);
 var arm7 = addOneArm(Math.PI*(-5/8), Math.PI*(-0.5), socketPos7);
 var arm8 = addOneArm(Math.PI*(5/8), Math.PI*(-0.5), socketPos8);
 
+// add eef to draggables
+const drag_controls = new THREE.DragControls([arm1[6], arm2[6], arm3[6], arm4[6], arm5[6], arm6[6], arm7[6], arm8[6]], camera, renderer.domElement);
+drag_controls.activate();
+drag_controls.addEventListener( 'dragstart', function ( event ) {
+	event.object.material = normalMaterial;
+  controls.enabled = false;
+} );
+drag_controls.addEventListener( 'dragend', function ( event ) {
+	event.object.material = eefMaterial;
+  controls.enabled = true;
+} );
+
 //***** Q3.b *****/
 function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
   joint1 = arm[0];
@@ -357,6 +389,7 @@ function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
   link2 = arm[3];
   joint3 = arm[4];
   link3 = arm[5];
+  eef = arm[6];
   /* copy and paste your function of addOneArm() here,
    * remove the lines of new THREE.mesh(...) and scene.add(...)
    * will update the matrices of the meshes so that 
@@ -469,8 +502,50 @@ function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
   var l3TS = new THREE.Matrix4().multiplyMatrices(TS, TS_L3);
   link3.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, l3TS));
 
-  return [joint1, link1, joint2, link2, joint3, link3];
+  // Add eef
+  eeTS = new THREE.Matrix4().multiplyMatrices(TS, bump);
+  joint3.setMatrix(new THREE.Matrix4().multiplyMatrices(OM, eeTS));
+
+  return [joint1, link1, joint2, link2, joint3, link3, eef];
 }
+
+
+// IK with circle-circle intersection
+// takes the length of each links and the end effector position
+// returns the intersection position
+function circleIntersection(l1, l2, ee_pos, up_vector) {
+  var A = ee_pos.length();
+  var s2 = A - l2;
+  var B = (l1 + s2) / 2.0;
+  var C = l1 - l2;
+  var D = C * B / A;
+  var int_pos = ee_pos.clone().normalize().multiplyScalar(D);
+  var height = Math.sqrt(l1*l1 - D*D);
+  up_vector = up_vector.clone();
+  up_vector = up_vector.add(int_pos.clone().normalize().multiplyScalar(up_vector.dot(int_pos)).negate());
+  int_pos = int_pos.add(up_vector.normalize().multiplyScalar(height));
+
+  return int_pos
+}
+
+
+
+function ikArm(arm) {
+  joint1 = arm[0];
+  link1 = arm[1];
+  joint2 = arm[2];
+  link2 = arm[3];
+  joint3 = arm[4];
+  link3 = arm[5];
+  eef = arm[6];
+  
+
+
+  return [joint1, link1, joint2, link2, joint3, link3, eef];
+}
+
+
+
 
 var clock = new THREE.Clock(true);
 var initalMtx = octopusMatrix.value;
@@ -478,6 +553,9 @@ function updateBody() {
   switch(channel)
   {
     case 0: 
+      // ****** Inverse Kinematics with click and drag ****** //
+
+
       break;
 
     case 1:
