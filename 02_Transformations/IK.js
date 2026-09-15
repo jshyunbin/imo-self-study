@@ -513,19 +513,18 @@ function animateArm(t, arm, angle_Y, angle_Z, socketPosition) {
 // IK with circle-circle intersection
 // takes the length of each links and the end effector position
 // returns the intersection position
-function circleIntersection(l1, l2, ee_pos, up_vector) {
-  var A = ee_pos.length();
+function circleIntersection(l1, l2, origin, ee_pos, up_vector) {
+  var A = Math.min(ee_pos.distanceTo(origin), l1+l2);
   var s2 = A - l2;
   var B = (l1 + s2) / 2.0;
-  var C = l1 - l2;
-  var D = C * B / A;
-  var int_pos = ee_pos.clone().normalize().multiplyScalar(D);
+  var C = l1 - s2;
+  var D = C * B / A + s2;
+  var dir = ee_pos.clone().add(origin.clone().negate()).normalize().multiplyScalar(D);
   var height = Math.sqrt(l1*l1 - D*D);
-  up_vector = up_vector.clone();
-  up_vector = up_vector.add(int_pos.clone().normalize().multiplyScalar(up_vector.dot(int_pos)).negate());
-  int_pos = int_pos.add(up_vector.normalize().multiplyScalar(height));
-
-  return int_pos
+  var h_vec = up_vector.clone();
+  h_vec.projectOnPlane(dir).normalize().multiplyScalar(height);
+  dir.add(h_vec);
+  return dir.add(origin);
 }
 
 
@@ -539,7 +538,84 @@ function ikArm(arm) {
   link3 = arm[5];
   eef = arm[6];
   
+  var v1 = 3.0 * (Math.min(eef.position.distanceTo(joint1.position), 6) / 6.0) + 1.0;
+  v1 = Math.min(v1, 4.0)
 
+  j3_pos = circleIntersection(v1, 2.0, joint1.position, eef.position, new THREE.Vector3().set(0, 1, 0));
+
+  joint3.setMatrix(new THREE.Matrix4().set(
+    1, 0, 0, j3_pos.x,
+    0, 1, 0, j3_pos.y,
+    0, 0, 1, j3_pos.z,
+    0, 0, 0, 1,
+  ));
+
+  j2_pos = circleIntersection(2.0, 2.0, joint1.position, joint3.position, new THREE.Vector3().set(0, 1, 0));
+
+  joint2.setMatrix(new THREE.Matrix4().set(
+    1, 0, 0, j2_pos.x,
+    0, 1, 0, j2_pos.y,
+    0, 0, 1, j2_pos.z,
+    0, 0, 0, 1,
+  ));
+
+  bump = new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  );
+
+  link1_dir = joint2.position.clone().add(joint1.position.clone().negate()).normalize();
+  y_angle = link1_dir.angleTo(new THREE.Vector3().set(0, 1, 0));
+  x_angle = Math.atan(link1_dir.z/link1_dir.x);
+  x_angle += link1_dir.x >= 0 ? 0 : Math.PI;
+  link1_mat = new THREE.Matrix4().set(
+    1, 0, 0, joint1.position.x,
+    0, 1, 0, joint1.position.y,
+    0, 0, 1, joint1.position.z,
+    0, 0, 0, 1,
+  );
+
+  link1_mat.multiply(defineRotation_Y(-x_angle));
+  link1_mat.multiply(defineRotation_Z(-y_angle));
+  link1_mat.multiply(bump);
+
+  link1.setMatrix(link1_mat);
+
+  link2_dir = joint3.position.clone().add(joint2.position.clone().negate()).normalize();
+  y_angle = link2_dir.angleTo(new THREE.Vector3().set(0, 1, 0));
+  x_angle = Math.atan(link2_dir.z/link2_dir.x);
+  x_angle += link2_dir.x >= 0 ? 0 : Math.PI;
+  link2_mat = new THREE.Matrix4().set(
+    1, 0, 0, joint2.position.x,
+    0, 1, 0, joint2.position.y,
+    0, 0, 1, joint2.position.z,
+    0, 0, 0, 1,
+  );
+
+  link2_mat.multiply(defineRotation_Y(-x_angle));
+  link2_mat.multiply(defineRotation_Z(-y_angle));
+  link2_mat.multiply(bump);
+
+  link2.setMatrix(link2_mat);
+
+  link3_dir = eef.position.clone().add(joint3.position.clone().negate()).normalize();
+  y_angle = link3_dir.angleTo(new THREE.Vector3().set(0, 1, 0));
+  x_angle = Math.atan(link3_dir.z/link3_dir.x);
+  x_angle += link3_dir.x >= 0 ? 0 : Math.PI;
+  link3_mat = new THREE.Matrix4().set(
+    1, 0, 0, joint3.position.x,
+    0, 1, 0, joint3.position.y,
+    0, 0, 1, joint3.position.z,
+    0, 0, 0, 1,
+  );
+
+  link3_mat.multiply(defineRotation_Y(-x_angle));
+  link3_mat.multiply(defineRotation_Z(-y_angle));
+  link3_mat.multiply(bump);
+
+  link3.setMatrix(link3_mat);
 
   return [joint1, link1, joint2, link2, joint3, link3, eef];
 }
@@ -554,7 +630,15 @@ function updateBody() {
   {
     case 0: 
       // ****** Inverse Kinematics with click and drag ****** //
-
+      drag_controls.enabled = true;
+      ikArm(arm1);
+      ikArm(arm2);
+      ikArm(arm3);
+      ikArm(arm4);
+      ikArm(arm5);
+      ikArm(arm6);
+      ikArm(arm7);
+      ikArm(arm8);
 
       break;
 
