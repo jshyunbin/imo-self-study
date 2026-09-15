@@ -62,6 +62,9 @@ var octopusMaterial = new THREE.ShaderMaterial({
 var eefMaterial = new THREE.MeshBasicMaterial({
   color: new THREE.Color('red'),
 });
+var wireMaterial = new THREE.MeshBasicMaterial({
+  color: new THREE.Color('black'),
+});
 var shaderFiles = [
   'glsl/octopus.vs.glsl',
   'glsl/octopus.fs.glsl'
@@ -218,6 +221,31 @@ var l3 = new THREE.CylinderGeometry(0.1, 0.25, 2, 64);
 
 // Add draggable eef object for ik eef reference
 var eef_geo = new THREE.SphereGeometry(0.2,64,64);
+var h = new THREE.CylinderGeometry(0.05, 0.05, 6, 64);
+
+
+// draggable body eef
+var body_eef = new THREE.Mesh(eef_geo, eefMaterial);
+body_eef.setMatrix(new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 7,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+).multiply(octopusMatrix.value));
+
+scene.add(body_eef);
+
+var body_link = new THREE.Mesh(h, wireMaterial);
+body_link.setMatrix(new THREE.Matrix4().set(
+    1, 0, 0, 0,
+    0, 1, 0, 4,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+).multiply(octopusMatrix.value));
+
+scene.add(body_link);
+
+
 
 // ***** Q1 *****//
 function addOneArm(angle_Y, angle_Z, socketPosition) {
@@ -370,7 +398,7 @@ var arm7 = addOneArm(Math.PI*(-5/8), Math.PI*(-0.5), socketPos7);
 var arm8 = addOneArm(Math.PI*(5/8), Math.PI*(-0.5), socketPos8);
 
 // add eef to draggables
-const drag_controls = new THREE.DragControls([arm1[6], arm2[6], arm3[6], arm4[6], arm5[6], arm6[6], arm7[6], arm8[6]], camera, renderer.domElement);
+const drag_controls = new THREE.DragControls([body_eef, arm1[6], arm2[6], arm3[6], arm4[6], arm5[6], arm6[6], arm7[6], arm8[6]], camera, renderer.domElement);
 drag_controls.activate();
 drag_controls.addEventListener( 'dragstart', function ( event ) {
 	event.object.material = normalMaterial;
@@ -647,6 +675,53 @@ function updateBody() {
     case 0: 
       // ****** Inverse Kinematics with click and drag ****** //
       drag_controls.enabled = true;
+      octopusMatrix.value = new THREE.Matrix4().multiplyMatrices(body_eef.matrix, new THREE.Matrix4().set(
+        1, 0, 0, 0,
+        0, 1, 0, -7,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+      ));
+
+      body_link.setMatrix(new THREE.Matrix4().set(
+          1, 0, 0, 0,
+          0, 1, 0, 4,
+          0, 0, 1, 0,
+          0, 0, 0, 1
+      ).multiply(octopusMatrix.value));
+
+      eyeball_R.setMatrix(new THREE.Matrix4().multiplyMatrices(
+        octopusMatrix.value,
+        eyeballTS_R
+      ));
+      pupil_R.setMatrix(new THREE.Matrix4().multiplyMatrices(
+        new THREE.Matrix4().multiplyMatrices(
+          octopusMatrix.value,
+          eyeballTS_R
+        ),
+        new THREE.Matrix4().multiplyMatrices(
+          defineRotation_Y(theta_R),
+          pupilTS_R
+        )
+      ));
+      scene.add(eyeball_R);
+      scene.add(pupil_R);
+      // You can also define the matrices and multiply
+      // Left eye
+      oct_eye_L = new THREE.Matrix4().multiplyMatrices(
+        octopusMatrix.value,
+        eyeballTS_L
+      );
+      pupil_L_TSR = new THREE.Matrix4().multiplyMatrices(
+        defineRotation_Y(theta_L),
+        pupilTS_L
+      );
+      oct_pupil = new THREE.Matrix4().multiplyMatrices(
+        oct_eye_L,
+        pupil_L_TSR
+      );
+      eyeball_L.setMatrix(oct_eye_L);
+      pupil_L.setMatrix(oct_pupil);
+
       ikArm(arm1, Math.PI*(-1/8), Math.PI*(-0.5), socketPos1);
       ikArm(arm2, Math.PI*(1/8), Math.PI*(-0.5), socketPos2);
       ikArm(arm3, Math.PI*(-7/8), Math.PI*(-0.5), socketPos3);
