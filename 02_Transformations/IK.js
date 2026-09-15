@@ -529,7 +529,7 @@ function circleIntersection(l1, l2, origin, ee_pos, up_vector) {
 
 
 
-function ikArm(arm) {
+function ikArm(arm, angle_Y, angle_Z, socketPosition) {
   joint1 = arm[0];
   link1 = arm[1];
   joint2 = arm[2];
@@ -537,6 +537,22 @@ function ikArm(arm) {
   joint3 = arm[4];
   link3 = arm[5];
   eef = arm[6];
+
+  var RotY = defineRotation_Y(angle_Y);
+  var RotZ = defineRotation_Z(angle_Z);
+
+  var Rot = new THREE.Matrix4().multiplyMatrices(RotY, RotZ);
+
+  var TS = new THREE.Matrix4().set(
+    1, 0, 0, socketPosition[0],
+    0, 1, 0, socketPosition[1],
+    0, 0, 1, socketPosition[2],
+    0, 0, 0, 1
+  );
+
+  var j1TS = new THREE.Matrix4().multiplyMatrices(TS, Rot);
+
+  joint1.setMatrix(new THREE.Matrix4().multiplyMatrices(octopusMatrix.value, j1TS));
   
   var v1 = 3.0 * (Math.min(eef.position.distanceTo(joint1.position), 6) / 6.0) + 1.0;
   v1 = Math.min(v1, 4.0)
@@ -631,14 +647,14 @@ function updateBody() {
     case 0: 
       // ****** Inverse Kinematics with click and drag ****** //
       drag_controls.enabled = true;
-      ikArm(arm1);
-      ikArm(arm2);
-      ikArm(arm3);
-      ikArm(arm4);
-      ikArm(arm5);
-      ikArm(arm6);
-      ikArm(arm7);
-      ikArm(arm8);
+      ikArm(arm1, Math.PI*(-1/8), Math.PI*(-0.5), socketPos1);
+      ikArm(arm2, Math.PI*(1/8), Math.PI*(-0.5), socketPos2);
+      ikArm(arm3, Math.PI*(-7/8), Math.PI*(-0.5), socketPos3);
+      ikArm(arm4, Math.PI*(7/8), Math.PI*(-0.5), socketPos4);
+      ikArm(arm5, Math.PI*(-3/8), Math.PI*(-0.5), socketPos5);
+      ikArm(arm6, Math.PI*(3/8), Math.PI*(-0.5), socketPos6);
+      ikArm(arm7, Math.PI*(-5/8), Math.PI*(-0.5), socketPos7);
+      ikArm(arm8, Math.PI*(5/8), Math.PI*(-0.5), socketPos8);
 
       break;
 
