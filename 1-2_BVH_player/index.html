@@ -5,10 +5,30 @@
     <title>BVH Player</title>
     <style>
       body { margin: 0; }
+      #control_dock {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background-color: white;
+          font-size: 15px;
+          width: 200px;
+          text-align: left;
+          z-index: 100;
+          display: flex;
+          flex-direction: column;
+      }
+      .lists {
+        border: 1px solid #000000;
+        padding: 5px;
+      }
     </style>
   </head>
   <body>
     <script type="module" src="/main.js"></script>
+    <div id="control_dock">
+      <div class="lists">Controls</div>
+      <div class="lists">Select File</div>
+    </div>
   </body>
 </html>
 
