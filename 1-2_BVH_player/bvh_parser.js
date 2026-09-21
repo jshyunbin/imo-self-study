@@ -222,7 +222,8 @@ function peg$parse(input, options) {
     return n
   }
   function peg$f5(node_name, joint_offset, num_channels) {    return num_channels;  }
-  function peg$f6(node_name, joint_offset, num_channels, channels, links) {
+  function peg$f6(node_name, joint_offset, num_channels, n) {    return {"ch_name": n, "index": ind++,};  }
+  function peg$f7(node_name, joint_offset, num_channels, channels, links) {
     channel_count += num_channels;
     return {
         "name": node_name,
@@ -232,21 +233,21 @@ function peg$parse(input, options) {
         "conn_links": links,
     };
   }
-  function peg$f7(joint_offset) {
+  function peg$f8(joint_offset) {
     return {
         "type": "end",
         "offset": joint_offset,
     };
   }
-  function peg$f8(frames, frame_time) {    return frames;  }
-  function peg$f9(frames, frame_time, frame) {
+  function peg$f9(frames, frame_time) {    return frames;  }
+  function peg$f10(frames, frame_time, frame) {
     return {
         "num_frames": frames,
         "frame_time": frame_time,
         "frames": frame,
     };
   }
-  function peg$f10() {    return channel_count;  }
+  function peg$f11() {    return channel_count;  }
   let peg$currPos = options.peg$currPos | 0;
   let peg$savedPos = peg$currPos;
   const peg$posDetailsCache = [{ line: 1, column: 1 }];
@@ -940,7 +941,13 @@ function peg$parse(input, options) {
                             if (s15.length >= (s13|0)) {
                               s16 = peg$FAILED;
                             } else {
-                              s16 = peg$parseNAME();
+                              s16 = peg$currPos;
+                              s17 = peg$parseNAME();
+                              if (s17 !== peg$FAILED) {
+                                peg$savedPos = s16;
+                                s17 = peg$f6(s1, s7, s11, s17);
+                              }
+                              s16 = s17;
                             }
                             while (s16 !== peg$FAILED) {
                               s15.push(s16);
@@ -950,7 +957,13 @@ function peg$parse(input, options) {
                                 s16 = peg$currPos;
                                 s17 = peg$parseWS();
                                 if (s17 !== peg$FAILED) {
-                                  s17 = peg$parseNAME();
+                                  s17 = peg$currPos;
+                                  s18 = peg$parseNAME();
+                                  if (s18 !== peg$FAILED) {
+                                    peg$savedPos = s17;
+                                    s18 = peg$f6(s1, s7, s11, s18);
+                                  }
+                                  s17 = s18;
                                   if (s17 === peg$FAILED) {
                                     peg$currPos = s16;
                                     s16 = peg$FAILED;
@@ -1009,7 +1022,7 @@ function peg$parse(input, options) {
                                     }
                                     if (s17 !== peg$FAILED) {
                                       peg$savedPos = s0;
-                                      s0 = peg$f6(s1, s7, s11, s13, s15);
+                                      s0 = peg$f7(s1, s7, s11, s13, s15);
                                     } else {
                                       peg$currPos = s0;
                                       s0 = peg$FAILED;
@@ -1167,7 +1180,7 @@ function peg$parse(input, options) {
                         }
                         if (s11 !== peg$FAILED) {
                           peg$savedPos = s0;
-                          s0 = peg$f7(s9);
+                          s0 = peg$f8(s9);
                         } else {
                           peg$currPos = s0;
                           s0 = peg$FAILED;
@@ -1258,7 +1271,7 @@ function peg$parse(input, options) {
                     if (s9 !== peg$FAILED) {
                       s10 = peg$parseWS();
                       if (s10 !== peg$FAILED) {
-                        s11 = peg$f8(s5, s9);
+                        s11 = peg$f9(s5, s9);
                         s12 = peg$currPos;
                         s13 = [];
                         if (s13.length >= (s11|0)) {
@@ -1297,7 +1310,7 @@ function peg$parse(input, options) {
                           s12 = peg$parseWS();
                           if (s12 !== peg$FAILED) {
                             peg$savedPos = s0;
-                            s0 = peg$f9(s5, s9, s11);
+                            s0 = peg$f10(s5, s9, s11);
                           } else {
                             peg$currPos = s0;
                             s0 = peg$FAILED;
@@ -1353,7 +1366,7 @@ function peg$parse(input, options) {
   function peg$parseframe() {
     let s0, s1, s2, s3, s4;
 
-    s0 = peg$f10();
+    s0 = peg$f11();
     s1 = peg$currPos;
     s2 = [];
     if (s2.length >= (s0|0)) {
@@ -1394,6 +1407,7 @@ function peg$parse(input, options) {
 
 
   var channel_count = 0;
+  var ind = 0;
 
   peg$result = peg$startRuleFunction();
 

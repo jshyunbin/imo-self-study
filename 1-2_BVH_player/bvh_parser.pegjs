@@ -1,5 +1,6 @@
 {
   var channel_count = 0;
+  var ind = 0;
 }
 
 start
@@ -48,7 +49,8 @@ node
 = node_name:NAME WS 
     "{" WS 
         "OFFSET" WS joint_offset:NUMBER|3, WS| WS 
-        "CHANNELS" WS num_channels:INT WS channels:NAME|{ return num_channels; }, WS| WS 
+        "CHANNELS" WS num_channels:INT WS 
+        channels:(n:NAME { return {"ch_name": n, "index": ind++,}; })|{ return num_channels; }, WS| WS 
         links:link|1.., WS| WS 
     "}" 
 
