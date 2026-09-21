@@ -1,4 +1,6 @@
-
+{
+  var channel_count = 0;
+}
 
 start
 = h:hierarchy WS m:motion {
@@ -51,6 +53,7 @@ node
     "}" 
 
     {
+        channel_count += num_channels;
         return {
             "name": node_name,
             "offset": joint_offset,
@@ -75,4 +78,19 @@ end
 
 
 motion
-= "MOTION" WS $( [a-z_]i [a-z0-9_ :\t\r\n.-]i* )
+= "MOTION" WS 
+    "Frames:" WS frames:INT WS 
+    "Frame Time:" WS frame_time:FLOAT WS 
+    frame:frame|{ return frames; }, WS| WS
+
+    {
+        return {
+            "num_frames": frames,
+            "frame_time": frame_time,
+            "frames": frame,
+        };
+    }
+
+
+frame
+= NUMBER|{ return channel_count; }, WS|
