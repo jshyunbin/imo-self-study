@@ -1,7 +1,7 @@
 
 
 start
-= h:hierarchy m:motion {
+= h:hierarchy WS m:motion {
     return {
         "hierarchy": h,
         "motion": m,
@@ -9,7 +9,7 @@ start
 }
 
 WS
-= [ \t]*
+= [ \t\r\n]+
 
 INT
 = n:$( "-"? [0-9]+ ) { return parseInt(n, 10); }
@@ -21,7 +21,7 @@ NUMBER
 = FLOAT / INT
 
 NAME
-= $[a-z]i+
+= $( [a-z_]i [a-z0-9_]i* )
 
 hierarchy
 = "HIERARCHY" WS @root
@@ -45,9 +45,9 @@ joint
 node
 = node_name:NAME WS 
     "{" WS 
-        "OFFSET" WS joint_offset:NUMBER[3, WS] WS 
-        "CHANNELS" WS num_channels:INT WS channels:NAME[.., WS] WS 
-        links:link[1.., WS] WS 
+        "OFFSET" WS joint_offset:NUMBER|3, WS| WS 
+        "CHANNELS" WS num_channels:INT WS channels:NAME|{ return num_channels; }, WS| WS 
+        links:link|1.., WS| WS 
     "}" 
 
     {
@@ -61,14 +61,13 @@ node
     }
 
 end
-= "END" WS node_name:NAME WS 
+= "End"i WS "Site"i WS 
     "{" WS 
-        "OFFSET" WS joint_offset:NUMBER[3, WS] WS 
+        "OFFSET" WS joint_offset:NUMBER|3, WS| WS 
     "}" 
 
     {
         return {
-            "name": node_name,
             "type": "end",
             "offset": joint_offset,
         };
@@ -76,4 +75,4 @@ end
 
 
 motion
-= "MOTION" WS frames:
+= "MOTION" WS $( [a-z_]i [a-z0-9_ :\t\r\n.-]i* )

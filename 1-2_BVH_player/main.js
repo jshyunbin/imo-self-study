@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as bvh_parser from './bvh_parser.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
@@ -25,18 +26,42 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = document.querySelector("input");
+const messageDisplay = document.getElementById("message");
+var fileText = "";
+var fileObject = null;
 input.addEventListener("change", updateBVHFile);
 
 
+function updateBVHFile(event) {
+  const file = event.target.files[0];
+  fileText = ""; // Clear previous file content
+  messageDisplay.textContent = ""; // Clear previous messages
 
+  // Validate file existence and type
+  if (!file) {
+    showMessage("No file selected. Please choose a file.", "error");
+    return;
+  }
 
-
-
-
-
-function updateBVHFile() {
-
+  // Read the file
+  const reader = new FileReader();
+  reader.onload = () => {
+    fileText = reader.result;
+    fileObject = bvh_parser.parse(fileText);
+    console.log(fileObject);
+  };
+  reader.onerror = () => {
+    showMessage("Error reading the file. Please try again.", "error");
+  };
+  reader.readAsText(file);
 }
+
+// Displays a message to the user
+function showMessage(message, type) {
+  messageDisplay.textContent = message;
+  messageDisplay.style.color = type === "error" ? "red" : "green";
+}
+
 
 
 const axesHelper = new THREE.AxesHelper( 3 );
