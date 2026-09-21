@@ -25,17 +25,46 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
+// Listen to clicks on start/stop 
+
+const start_button = document.getElementById("start");
+const stop_button = document.getElementById("stop");
+var is_run = false;
+var curr_frame = 0;
+
+start_button.addEventListener('click', () => {
+  is_run = true;
+  curr_frame = 0;
+});
+
+stop_button.addEventListener('click', () => {
+  is_run = false;
+})
+
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+scene.add( directionalLight );
+
 const jointGeo = new THREE.SphereGeometry( 1, 32, 16 );
 const jointMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+const bodyMat = new THREE.MeshToonMaterial( { color: 0x00ffff } );
 const rootMat = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
 const root = new THREE.Mesh( jointGeo, rootMat );
 scene.add( root );
 
-function drawFigure(parent, h, m) {
+var figure;
+
+function drawFigure(parent, h, m, is_root=true) {
   var joint = new THREE.Mesh( jointGeo, jointMat );
+  figure.object = joint;
   joint.translateX(h.offset[0]);
   joint.translateY(h.offset[1]);
   joint.translateZ(h.offset[2]);
+
+  if (!is_root) {
+    const bodyGeo = new THREE.BoxGeometry(2, 2, (h.offset[0]**2 + h.offset[1]**2 + h.offset[2]**2)**0.5);
+    var body = new THREE.Mesh( bodyGeo, bodyMat );
+    joint.add(body);
+  }
 
   if (h.type == "end") {
     parent.add(joint);
@@ -43,7 +72,6 @@ function drawFigure(parent, h, m) {
   }
 
   for (const channel of h.channels) {
-const jointMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
     switch (channel.ch_name) {
       case "Xposition":
         joint.translateX(m[channel.index]);
@@ -56,14 +84,14 @@ const jointMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
         break;
 
       case "Xrotation":
-        joint.rotateX(m[channel.index]);
+        joint.rotateX(m[channel.index]/180*Math.PI);
         break;
 
       case "Yrotation":
-        joint.rotateY(m[channel.index]);
+        joint.rotateY(m[channel.index]/180*Math.PI);
         break;
       case "Zrotation":
-        joint.rotateZ(m[channel.index]);
+        joint.rotateZ(m[channel.index]/180*Math.PI);
         break;
       default:
         break;
@@ -73,14 +101,22 @@ const jointMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
   parent.add(joint);
 
   for (const links of h.conn_links) {
-    drawFigure(joint, links, m);
+    drawFigure(joint, links, m, false);
   }
 }
 
-
-
-
-
+function animateFigure(time) {
+  if (fileObject != null && is_run) {
+    for (const child of root.children) {
+      root.remove(child);
+    }
+    drawFigure(
+      root, 
+      fileObject.hierarchy, 
+      fileObject.motion.frames[((time / fileObject.motion.frame_time)| 0)%fileObject.motion.num_frames]
+    );
+  }
+}
 
 const input = document.querySelector("input");
 const messageDisplay = document.getElementById("message");
@@ -105,8 +141,9 @@ function updateBVHFile(event) {
   reader.onload = () => {
     fileText = reader.result;
     fileObject = bvh_parser.parse(fileText);
+    figure = fileObject.hierarchy
     console.log(fileObject);
-    drawFigure(root, fileObject.hierarchy, fileObject.motion.frames[0]);
+    drawFigure(root, figure, fileObject.motion.frames[0]);
   };
   reader.onerror = () => {
     showMessage("Error reading the file. Please try again.", "error");
@@ -121,7 +158,6 @@ function showMessage(message, type) {
 }
 
 
-
 const axesHelper = new THREE.AxesHelper( 3 );
 scene.add( axesHelper );
 
@@ -131,7 +167,7 @@ scene.add( gridHelper );
 
 
 function animate( time ) {
-
+  animateFigure(time * 0.001);
   renderer.render( scene, camera );
 }
 renderer.setAnimationLoop( animate );
