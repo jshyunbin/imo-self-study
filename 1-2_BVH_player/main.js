@@ -30,16 +30,29 @@ resize();
 const start_button = document.getElementById("start");
 const stop_button = document.getElementById("stop");
 var is_run = false;
-var curr_frame = 0;
 
 start_button.addEventListener('click', () => {
   is_run = true;
-  curr_frame = 0;
 });
 
 stop_button.addEventListener('click', () => {
   is_run = false;
 })
+
+// slider + timer
+
+const slider = document.getElementById("slider");
+
+var timeFromStart = 0.0;
+var prevTime = 0.0;
+var slider_val = slider.value;
+
+slider.oninput = function() {
+    slider_val = this.value;
+    timeFromStart = slider_val * 10 * fileObject.motion.timeLength;
+}
+
+
 
 const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
 scene.add( directionalLight );
@@ -119,14 +132,14 @@ function drawFigure(parent, h, m, is_root=true) {
 }
 
 function animateFigure(time) {
-  if (fileObject != null && is_run) {
+  if (fileObject != null) {
     for (const child of root.children) {
       root.remove(child);
     }
     drawFigure(
       root, 
       fileObject.hierarchy, 
-      fileObject.motion.frames[((time / fileObject.motion.frame_time)| 0)%fileObject.motion.num_frames]
+      fileObject.motion.frames[((time / fileObject.motion.frame_time)| 0)]
     );
   }
 }
@@ -155,6 +168,7 @@ function updateBVHFile(event) {
     fileText = reader.result;
     fileObject = bvh_parser.parse(fileText);
     figure = fileObject.hierarchy
+    fileObject.motion.timeLength = fileObject.motion.frame_time * fileObject.motion.num_frames;
     console.log(fileObject);
     drawFigure(root, figure, fileObject.motion.frames[0]);
   };
@@ -180,7 +194,15 @@ scene.add( gridHelper );
 
 
 function animate( time ) {
-  animateFigure(time * 0.001);
+  if (fileObject != null && is_run) {
+    timeFromStart += time - prevTime;
+    if (timeFromStart*0.001 > fileObject.motion.timeLength) {
+      timeFromStart = 0;
+    }
+    slider.value = timeFromStart / fileObject.motion.timeLength / 10;
+  }
+  prevTime = time;
+  animateFigure(timeFromStart * 0.001);
   renderer.render( scene, camera );
 }
 renderer.setAnimationLoop( animate );
