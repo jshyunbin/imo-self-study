@@ -60,14 +60,17 @@ function drawFigure(parent, h, m, is_root=true) {
   joint.translateY(h.offset[1]);
   joint.translateZ(h.offset[2]);
 
-  if (!is_root) {
-    const bodyGeo = new THREE.BoxGeometry(2, 2, (h.offset[0]**2 + h.offset[1]**2 + h.offset[2]**2)**0.5);
-    var body = new THREE.Mesh( bodyGeo, bodyMat );
-    joint.add(body);
-  }
-
   if (h.type == "end") {
     parent.add(joint);
+
+    const len = joint.position.length();
+    const bodyGeo = new THREE.BoxGeometry(2, 2, len);
+    var body = new THREE.Mesh( bodyGeo, bodyMat );
+
+    body.lookAt(joint.position);
+    body.translateZ(len*0.5);
+
+    parent.add(body);
     return;
   }
 
@@ -86,7 +89,6 @@ function drawFigure(parent, h, m, is_root=true) {
       case "Xrotation":
         joint.rotateX(m[channel.index]/180*Math.PI);
         break;
-
       case "Yrotation":
         joint.rotateY(m[channel.index]/180*Math.PI);
         break;
@@ -96,6 +98,17 @@ function drawFigure(parent, h, m, is_root=true) {
       default:
         break;
     }
+  }
+
+  if (!is_root) {
+    const len = joint.position.length();
+    const bodyGeo = new THREE.BoxGeometry(2, 2, len);
+    var body = new THREE.Mesh( bodyGeo, bodyMat );
+
+    body.lookAt(joint.position);
+    body.translateZ(len*0.5);
+
+    parent.add(body);
   }
 
   parent.add(joint);
