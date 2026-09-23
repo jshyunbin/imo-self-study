@@ -51,7 +51,7 @@ node
         "OFFSET" WS joint_offset:NUMBER|3, WS| WS 
         "CHANNELS" WS num_channels:INT WS 
         channels:(n:NAME { return {"ch_name": n, "index": ind++,}; })|{ return num_channels; }, WS| WS 
-        links:link|1.., WS| WS 
+        links:link|.., WS| WS? 
     "}" 
 
     {

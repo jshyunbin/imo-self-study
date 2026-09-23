@@ -64,11 +64,8 @@ const rootMat = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
 const root = new THREE.Mesh( jointGeo, rootMat );
 scene.add( root );
 
-var figure;
-
 function drawFigure(parent, h, m, is_root=true) {
   var joint = new THREE.Mesh( jointGeo, jointMat );
-  figure.object = joint;
   joint.translateX(h.offset[0]);
   joint.translateY(h.offset[1]);
   joint.translateZ(h.offset[2]);
@@ -167,10 +164,10 @@ function updateBVHFile(event) {
   reader.onload = () => {
     fileText = reader.result;
     fileObject = bvh_parser.parse(fileText);
-    figure = fileObject.hierarchy
     fileObject.motion.timeLength = fileObject.motion.frame_time * fileObject.motion.num_frames;
     console.log(fileObject);
-    drawFigure(root, figure, fileObject.motion.frames[0]);
+    drawFigure(root, fileObject.hierarchy, fileObject.motion.frames[0]);
+    timeFromStart = 0;
   };
   reader.onerror = () => {
     showMessage("Error reading the file. Please try again.", "error");
